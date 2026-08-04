@@ -1,0 +1,117 @@
+name: Update Privacy Firewall 0.6.10
+
+on:
+  push:
+    paths:
+      - ".github/workflows/update-0.6.10.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Update source, plugin and documentation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+          import re
+
+          source_path = Path("privacy_firewall.py")
+          plugin_path = Path("privacy_firewall.plugin")
+
+          source = source_path.read_text(encoding="utf-8")
+
+          description = '''__description__ = (
+              "Локальная защита конфиденциальных данных перед отправкой. "
+              "Проверяет сообщения, получателей и вложения, находит личные данные, "
+              "адреса, координаты, документы, банковские реквизиты, пароли и токены, "
+              "а затем предупреждает, маскирует или блокирует отправку.\\n\\n"
+              "По всем вопросам или найденным уязвимостям: @qwertsyiks"
+          )'''
+
+          source, count = re.subn(
+              r'__description__\s*=\s*\(.*?\n\)\n__author__',
+              description + '\n__author__',
+              source,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise RuntimeError("Не удалось заменить __description__")
+
+          source, count = re.subn(
+              r'__version__\s*=\s*"[^"]+"',
+              '__version__ = "0.6.10"',
+              source,
+              count=1,
+          )
+          if count != 1:
+              raise RuntimeError("Не удалось заменить __version__")
+
+          source_path.write_text(source, encoding="utf-8")
+          plugin_path.write_text(source, encoding="utf-8")
+
+          readme_path = Path("README.md")
+          readme = readme_path.read_text(encoding="utf-8")
+          readme = re.sub(
+              r'\*\*Текущая версия:\*\* `[^`]+`',
+              '**Текущая версия:** `0.6.10`',
+              readme,
+              count=1,
+          )
+          readme_path.write_text(readme, encoding="utf-8")
+
+          changelog_path = Path("CHANGELOG.md")
+          changelog = changelog_path.read_text(encoding="utf-8")
+          section = '''## 0.6.10
+
+- обновлено описание плагина;
+- удалена ссылка на исходный код из встроенного описания;
+- добавлен контакт для вопросов и сообщений об уязвимостях: `@qwertsyiks`;
+- исходник и установочный файл синхронизированы.
+
+'''
+          if "## 0.6.10" not in changelog:
+              changelog = changelog.replace("# Changelog\n\n", "# Changelog\n\n" + section, 1)
+          changelog_path.write_text(changelog, encoding="utf-8")
+          PY
+
+      - name: Validate plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile privacy_firewall.py
+          cmp privacy_firewall.py privacy_firewall.plugin
+          grep -F '__version__ = "0.6.10"' privacy_firewall.py
+          grep -F 'По всем вопросам или найденным уязвимостям: @qwertsyiks' privacy_firewall.py
+          if grep -Fq 'Исходный код:' privacy_firewall.py; then
+            echo "В описании осталась ссылка на исходный код"
+            exit 1
+          fi
+
+      - name: Remove obsolete bootstrap files
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .bootstrap
+          rm -f .github/workflows/publish.yml
+          rm -f .github/workflows/update-0.6.10.yml
+
+      - name: Commit release
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Release Privacy Firewall 0.6.10"
+          git push
