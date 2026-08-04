@@ -3,7 +3,7 @@ name: Publish Privacy Firewall source
 on:
   push:
     paths:
-      - ".bootstrap/source/**"
+      - ".bootstrap/source_0610/**"
       - ".github/workflows/publish.yml"
   workflow_dispatch:
 
@@ -21,7 +21,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .bootstrap/source/part_* | base64 --decode > /tmp/privacy_firewall.py.gz
+          cat .bootstrap/source_0610/part_* | base64 --decode > /tmp/privacy_firewall.py.gz
           gzip --decompress --stdout /tmp/privacy_firewall.py.gz > privacy_firewall.py
           cp privacy_firewall.py privacy_firewall.plugin
 
@@ -30,8 +30,14 @@ jobs:
         run: |
           set -euo pipefail
           python -m py_compile privacy_firewall.py
-          test "$(sha256sum privacy_firewall.py | cut -d' ' -f1)" = "2c25bada0f86a94f174bd53d20317ad45dc8f2dcbf5087928db6b778eec763a7"
+          test "$(sha256sum privacy_firewall.py | cut -d' ' -f1)" = "00297c05d5d196cc945017a18de8c0ba6a5c1d8222a427f09cf6fd6099859449"
           cmp privacy_firewall.py privacy_firewall.plugin
+          grep -F '__version__ = "0.6.10"' privacy_firewall.py
+          grep -F 'По всем вопросам или найденным уязвимостям: @qwertsyiks' privacy_firewall.py
+          if grep -Fq 'Исходный код:' privacy_firewall.py; then
+            echo "В описании осталась ссылка на исходный код"
+            exit 1
+          fi
 
       - name: Commit published files
         shell: bash
@@ -43,6 +49,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "Published files are already current."
           else
-            git commit -m "Publish Privacy Firewall 0.6.8 source and plugin"
+            git commit -m "Publish Privacy Firewall 0.6.10 source and plugin"
             git push
           fi
