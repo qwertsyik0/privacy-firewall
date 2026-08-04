@@ -2,7 +2,7 @@
 
 Локальный плагин конфиденциальности для exteraGram и совместимых клиентов.
 
-![Аватар Privacy Firewall](assets/avatar.png)
+**Текущая версия:** `0.6.8`
 
 ## Возможности
 
@@ -17,8 +17,8 @@
 
 ## Установка
 
-1. Скачайте файл [`privacy_firewall.plugin`](privacy_firewall.plugin).
-2. Откройте его через exteraGram.
+1. Скачайте [`privacy_firewall.plugin`](privacy_firewall.plugin).
+2. Откройте файл через exteraGram.
 3. Включите плагин и перезапустите клиент.
 
 ## Совместимость
@@ -39,12 +39,12 @@ __icon__ = "teststiofgu/0"
 
 Проверка выполняется локально. Плагин не делает собственных сетевых запросов и не сохраняет тексты сообщений или найденные значения. Локальная статистика содержит только числовые счётчики.
 
-## Файлы
+## Основные файлы
 
-- `privacy_firewall.plugin` — готовый файл для установки;
-- `privacy_firewall.py` — исходный код;
-- `assets/avatar.png` — аватар проекта;
-- `assets/avatar_sticker.webp` — версия для Telegram-стикера.
+- [`privacy_firewall.plugin`](privacy_firewall.plugin) — готовый установочный файл;
+- [`privacy_firewall.py`](privacy_firewall.py) — открытый исходный код;
+- [`CHANGELOG.md`](CHANGELOG.md) — история изменений;
+- [`SECURITY.md`](SECURITY.md) — правила безопасного сообщения об уязвимостях.
 
 ## Автор
 
